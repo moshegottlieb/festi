@@ -1,3 +1,6 @@
+# Work in progress, don't download this yet.  
+# Still sorting it out for the general public
+
 # festi
 Festive lights for raspberry pi, led lights and GPIO
 
