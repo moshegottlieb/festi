@@ -1,0 +1,14 @@
+[Unit]
+Description=Festive Lights
+After=network.target
+Requires=pigpiod.service
+
+[Service]
+Type=simple
+User=zigfried
+WorkingDirectory=/home/zigfried/festi
+ExecStart=/home/zigfried/festi/build/festi
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
