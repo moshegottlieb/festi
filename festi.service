@@ -5,7 +5,7 @@ Requires=pigpiod.service
 
 [Service]
 Type=simple
-User=zigfried
+User=festi
 ExecStart=/usr/local/bin/festi
 Restart=on-abort
 
