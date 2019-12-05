@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include "pig.h"
 
+namespace festi {
+
 class Sun {
 public:
     Sun();
@@ -18,7 +20,6 @@ private:
      */
     bool lightsOn() const noexcept;
 private:
-    static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
     static void breakHandle(int signal);
 private:
     time_t _sunrise;
@@ -27,3 +28,5 @@ private:
     Pig _pig;
     Pig::Pin _pin;
 };
+
+}

@@ -1,63 +1,24 @@
 #include "sun.h"
-#include <curl/curl.h>
+#include "util.h"
+#include "config.h"
 #include <chrono>
 #include <thread>
 #include <iostream>
 #include <ios>
 #include <fstream>
+#include <strstream>
 #include <iomanip>
 #include <csignal>
-#include "nlohmann_json/json.hpp"
-
-#define max(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a > _b ? _a : _b;       \
-})
-
-#define min(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a < _b ? _a : _b;       \
-})
+#include <json.hpp>
 
 using json = nlohmann::json;
 
+using namespace festi;
+
 static const std::string CACHE_FILE = "/tmp/festi_cache.json";
-
-#define BUFFER_SIZE 16384
-
-struct Buffer {
-    Buffer(){
-        len = 0;
-        data[0] = 0;
-    }
-    char data[BUFFER_SIZE];
-    size_t len;
-};
 
 Sun::Sun():_pig(),_pin(24,_pig),_sunrise(0),_sunset(0){
     _pin.setMode(Pig::Pin::Output);
-}
-
-void prettyPrintTime(time_t time,std::ostream& stream){
-    struct tm t;
-    localtime_r(&time,&t);
-    stream << std::put_time(&t,"%X") << std::endl;
-}
-
-
-bool isSameDay(time_t d1,time_t d2){
-    struct tm ld1;
-    localtime_r(&d1,&ld1);
-    struct tm ld2;
-    localtime_r(&d2,&ld2);
-    return ld1.tm_mday == ld2.tm_mday && ld1.tm_mon == ld2.tm_mon && ld1.tm_year == ld2.tm_year;
-}
-bool isToday(time_t d){
-    return isSameDay(d,time(nullptr));
 }
 
 bool Sun::needDownload() const noexcept{
@@ -144,19 +105,7 @@ void Sun::run(){
 
 bool Sun::readCache(){
     try {
-        std::ifstream cache(CACHE_FILE,std::ifstream::binary);
-        if (!cache) return false; // no file
-        cache.seekg(0,cache.end);
-        if (!cache) throw std::runtime_error("Seek to end error");
-        size_t length = cache.tellg();
-        if (length > 4095) throw std::runtime_error("File too big");
-        cache.seekg(0,cache.beg);
-        if (!cache) throw std::runtime_error("Seek to start error");
-        char buffer[length+1];
-        cache.read(buffer,length);
-        if (!cache) throw std::runtime_error("Error reading file");
-        buffer[length] = '\0';
-        auto parsed = json::parse(buffer);                        
+        auto parsed = readJson(CACHE_FILE);                       
         time_t sunrise = parsed["sunrise"].get<int>();
         time_t sunset = parsed["sunset"].get<int>();
         if (isToday(sunrise) && isToday(sunset)){
@@ -182,34 +131,18 @@ void Sun::writeCache(){
     }
 }
 
-
-
-
 void Sun::download(){
-    auto url = "https://api.darksky.net/forecast/5e7ebea6c84678ad44c6f3371436e10a/52.5082702,13.4672354?exclude=minutely,hourly,alerts,flags&units=si";
-    CURL *curl;
-    CURLcode res;
-    curl = curl_easy_init();
-    Buffer buffer;
-    if(curl) {
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
-        res = curl_easy_perform(curl);
-        if(res != CURLE_OK) {
-            std::string error = curl_easy_strerror(res);
-            curl_easy_cleanup(curl);
-            throw std::runtime_error(error);
-        }
-        curl_easy_cleanup(curl);
-    }
-    auto parsed = json::parse(buffer.data);
+    // Will move soon to the whole config stuff, for now, this is what we've got
+    std::strstream url;
+    url << "https://api.darksky.net/forecast/" << Config::shared().dark.key << "/";
+    url << Config::shared().dark.location.latitude << "," << Config::shared().dark.location.longitude << "?exclude=minutely,hourly,alerts,flags&units=si";
+    std::string surl(url.str(),url.pcount());
+    auto parsed = readJsonUrl(surl);
     if (parsed.empty()){
         throw std::runtime_error("Unable to parse json");
     }
-    _sunrise = parsed["daily"]["data"][0]["sunriseTime"].get<int>();
-    _sunset = parsed["daily"]["data"][0]["sunsetTime"].get<int>();
+    _sunrise = parsed.at("daily").at("data").at(0).at("sunriseTime").get<int>();
+    _sunset = parsed.at("daily").at("data").at(0).at("sunsetTime").get<int>();
     printf(ctime(&_sunrise));
     struct tm t;
     localtime_r(&_sunrise,&t);
@@ -218,17 +151,4 @@ void Sun::download(){
     t.tm_sec = 0;
     _sunrise = mktime(&t);
     printf(ctime(&_sunrise));
-}
-
-size_t Sun::write_data(void *ptr, size_t size, size_t nmemb, void *stream){
-    size_t len = size * nmemb;
-    Buffer& buffer = *((Buffer*)stream);
-    if ((buffer.len + len) < BUFFER_SIZE){
-        memcpy(buffer.data + buffer.len,ptr,len);
-        buffer.len += len;
-        buffer.data[buffer.len] = 0;
-        return len;
-    } else {
-        return 0;
-    }
 }

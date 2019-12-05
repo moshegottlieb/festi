@@ -23,6 +23,9 @@ $(TARGET): $(OBJ)
 		@echo [LINK] $(TGT_NAME)
 		@$(CXX) $(OBJ) -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS)
 
+debug: CFLAGS+= -O0
+debug: $(TARGET)
+
 install: $(TARGET)
 		@echo [INSTALL] 
 		@mkdir -p $(INSTALL_PREFIX)/bin

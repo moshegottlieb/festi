@@ -6,8 +6,7 @@ Requires=pigpiod.service
 [Service]
 Type=simple
 User=zigfried
-WorkingDirectory=/home/zigfried/festi
-ExecStart=/home/zigfried/festi/build/festi
+ExecStart=/usr/local/bin/festi
 Restart=on-abort
 
 [Install]

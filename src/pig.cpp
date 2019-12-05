@@ -1,5 +1,7 @@
 #include "pig.h"
 
+using namespace festi;
+
 Pig::Pig(){
     _pig = pigpio_start(nullptr,nullptr);
     if (_pig < 0){

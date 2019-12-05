@@ -3,6 +3,10 @@
 #include <stdexcept>
 #include <pigpiod_if2.h>
 
+namespace festi {
+
+
+
 class Pig {
 public:
     Pig();
@@ -49,3 +53,5 @@ public:
 private:
     int _pig;
 };
+
+}

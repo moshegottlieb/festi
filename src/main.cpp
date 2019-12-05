@@ -4,7 +4,7 @@
 #include "sun.h"
 
 int main(int,char**){
-    Sun s;
+    festi::Sun s;
     s.run();
     return 0;
 }
