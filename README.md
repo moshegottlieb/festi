@@ -34,7 +34,7 @@ Your built product should be in `build/festi`
 
 1. You will need an API key from [DarkSky](https://darksky.net/dev), it is used to fetch sunrise and sunset times every day.
 1. You will also need your longitude and latitude (can be of your city too) for the DarkSky API so that your sunrise and sunset times are correct
-1. Make sure your local timezone is correct, I _may_ fix this sometime (`sudo raspi-config` and follow instructions to set timezone)
+1. Make sure your local timezone is correct, I _may_ fix this sometime (`sudo raspi-config` and follow instructions to set timezone) (update: working on this)
 
 ### Install script
 
