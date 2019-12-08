@@ -10,12 +10,7 @@ using json = nlohmann::json;
 namespace festi {
 
 Config& Config::shared(){
-    static bool sInit = false;
     static Config config;
-    if (!sInit){
-        sInit = true;
-        config.reload();
-    }
     return config;
 }
 
@@ -32,20 +27,14 @@ void Config::reload(){
     }
     if (!homedir || !load(std::string(homedir) + "/.config/festi.json")){
         if (!load("/etc/festi.json")){
+            std::clog << "No config - falling back to defaults" << std::endl;
             sunrise = Time::ptr(new Time());
             sunset = Time::ptr(new Time());
             sunrise->hour = 1; // Stop at 1am
             sunset->hour = 19; // Default sunset at 19:00
+            Config::shared().pin = 24;
         }
     }
-}
-
-void to_json(nlohmann::json& j, const Config::Time& t){
-    j = json { "hour", t.hour, "minute", t.minute };
-}
-void from_json(const nlohmann::json& j, Config::Time& t){
-    t.hour = j.at("hour").get<double>();
-    t.minute = j.at("minute").get<double>();
 }
 
 void to_json(nlohmann::json& j, const Config::DarkSky& d){
@@ -72,31 +61,28 @@ void to_json(nlohmann::json& j, const Config& c){
     if (c.sunrise){
         j["sunrise"] = *c.sunrise;
     }
+    j["pin"] = c.pin;
 }
 void from_json(const nlohmann::json& j, Config& c){
     c.dark = j.at("dark-sky");
+    c.pin = j.at("pin");
     auto i = j.find("sunset");
     if (i != j.end()){
-        c.sunset = Config::Time::ptr(new Config::Time(i->get<Config::Time>()));
+        c.sunset = Time::ptr(new Time(i->get<Time>()));
     }
     i = j.find("sunrise");
     if (i != j.end()){
-        c.sunrise = Config::Time::ptr(new Config::Time(i->get<Config::Time>()));
+        c.sunrise = Time::ptr(new Time(i->get<Time>()));
     }
 }
 
 bool Config::load(const std::string& path){
     try {
-        try {
-            _json = readJson(path);
-            *this = _json.get<Config>();
-            
-        } catch (const std::exception& e){
-            std::cerr << "Error loading configuration file: " << path << std::endl;
-        }
+        _json = readJson(path);
+        *this = _json.get<Config>();
+        std::clog << "Using " << path << std::endl;
         return true;
     } catch (const std::exception& e){
-        std::clog << "Could not load configuration file: " << path << std::endl;
         return false;
     }
 }

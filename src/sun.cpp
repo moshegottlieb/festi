@@ -6,19 +6,37 @@
 #include <iostream>
 #include <ios>
 #include <fstream>
-#include <strstream>
+#include <sstream>
 #include <iomanip>
 #include <csignal>
 #include <json.hpp>
+#include <ctime>
+#include <unistd.h>
 
 using json = nlohmann::json;
 
 using namespace festi;
 
-static const std::string CACHE_FILE = "/tmp/festi_cache.json";
+static bool _need_reload = true;
 
-Sun::Sun():_pig(),_pin(24,_pig),_sunrise(0),_sunset(0){
-    _pin.setMode(Pig::Pin::Output);
+const std::string& cacheFile() noexcept {
+    static bool sInit = false;
+    static std::string sFilename;
+    if (!sInit){
+        sInit = true;
+        std::stringstream s;
+        s << "/tmp/fest_cache." << getuid() << ".json";
+        sFilename = s.str();
+    }
+    return sFilename;
+}
+
+Sun& Sun::shared(){
+    static Sun sSun;
+    return sSun;
+}
+
+Sun::Sun():_pig(),_pin(_pig),_sunrise(0),_sunset(0){
 }
 
 bool Sun::needDownload() const noexcept{
@@ -45,15 +63,26 @@ void Sun::breakHandle(int signal){
     exit(0);
 }
 
+void Sun::hupHandle(int signal){
+    _need_reload = true;
+}
 
 void Sun::run(){
     sSun = this;
-    _pin.setValue(true); // turn off
+
     signal(SIGINT,breakHandle);
     signal(SIGTERM,breakHandle);
+    signal(SIGHUP,hupHandle);
     _last = 0;
     bool was_on = false;
     while (true){
+        if (_need_reload){
+            Config::shared().reload();
+            _need_reload = false;
+            _pin.setPin(Config::shared().pin);
+            _pin.setValue(true); // turn off
+            _pin.setMode(Pig::Pin::Output);
+        }
         if (needDownload()){
             std::clog << "Need download" << std::endl;
             time_t now = time(nullptr);
@@ -68,9 +97,9 @@ void Sun::run(){
                 }
                 _last = time(nullptr);
                 std::clog << "Sunrise: ";
-                prettyPrintTime(_sunrise,std::clog);
+                prettyPrintTime(_timezone,_sunrise,std::clog) << std::endl;
                 std::clog << "Sunset: ";
-                prettyPrintTime(_sunset,std::clog);
+                prettyPrintTime(_timezone,_sunset,std::clog) << std::endl;
             } catch (const std::exception& e){
                 std::cerr << "Download error: " << e.what() << std::endl;
                 continue;
@@ -105,50 +134,54 @@ void Sun::run(){
 
 bool Sun::readCache(){
     try {
-        auto parsed = readJson(CACHE_FILE);                       
+        auto parsed = readJson(cacheFile());                       
         time_t sunrise = parsed["sunrise"].get<int>();
         time_t sunset = parsed["sunset"].get<int>();
-        if (isToday(sunrise) && isToday(sunset)){
+        std::string zone = parsed["timezone"].get<std::string>();
+        if (isToday(sunrise)){
+            std::clog << "Using cached values" << std::endl;
             _sunrise = sunrise;
             _sunset = sunset;
+            _timezone = zone;
             return true;
         }
     } catch (const std::exception& e){
         std::cerr << "Error reading /tmp/festi_cache.json " << e.what() << std::endl;
     }
+    std::clog << "Not using cached values" << std::endl;
     return false;
 }
 void Sun::writeCache(){
     try {
-        std::ofstream cache(CACHE_FILE,std::ofstream::trunc);
+        std::ofstream cache(cacheFile(),std::ofstream::trunc);
         if (!cache) throw std::runtime_error("Error opening file");
         cache << "{\n";
         cache << "\t\"sunrise\":" << _sunrise << "," << std::endl;
-        cache << "\t\"sunset\":" << _sunset << std::endl;
+        cache << "\t\"sunset\":" << _sunset << "," << std::endl;
+        cache << "\t\"timezone\": \"" << _timezone << "\"" << std::endl;
         cache << "}";
     } catch (const std::exception& e){
-        std::cerr << "Error writing cache file " << CACHE_FILE << ": " << e.what() << std::endl;
+        std::cerr << "Error writing cache file " << cacheFile() << ": " << e.what() << std::endl;
     }
 }
 
 void Sun::download(){
     // Will move soon to the whole config stuff, for now, this is what we've got
-    std::strstream url;
+    std::stringstream url;
     url << "https://api.darksky.net/forecast/" << Config::shared().dark.key << "/";
     url << Config::shared().dark.location.latitude << "," << Config::shared().dark.location.longitude << "?exclude=minutely,hourly,alerts,flags&units=si";
-    std::string surl(url.str(),url.pcount());
-    auto parsed = readJsonUrl(surl);
+    auto parsed = readJsonUrl(url.str());
     if (parsed.empty()){
         throw std::runtime_error("Unable to parse json");
     }
     _sunrise = parsed.at("daily").at("data").at(0).at("sunriseTime").get<int>();
     _sunset = parsed.at("daily").at("data").at(0).at("sunsetTime").get<int>();
-    printf(ctime(&_sunrise));
+    _timezone = parsed.at("timezone").get<std::string>();
+    
     struct tm t;
-    localtime_r(&_sunrise,&t);
+    to_localtime(_timezone,_sunrise,t);
     t.tm_hour = 1;
     t.tm_min = 0;
     t.tm_sec = 0;
     _sunrise = mktime(&t);
-    printf(ctime(&_sunrise));
 }

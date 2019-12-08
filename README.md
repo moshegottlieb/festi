@@ -13,7 +13,8 @@ These instructions are for the official raspbian distribution.
 1. `libcurl4-openssl-dev` (or some other `libcurl4-xxx-dev` option)
 1. `pigpiod` and `libpigpiod-if-dev`
 1. `nlohmann-json-dev`
-`sudo apt-get install libcurl4-openssl-dev pigpiod libpigpiod-if-dev nlohmann-json-dev`
+1. `libcctz-dev`
+`sudo apt-get install libcurl4-openssl-dev pigpiod libpigpiod-if-dev nlohmann-json-dev libcctz-dev`
 
 Dependencies required for building:  
 

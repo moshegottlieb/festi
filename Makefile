@@ -1,7 +1,7 @@
 SRCDIR = src
 TGT_NAME = festi
 UNAME_S := $(shell uname -s)
-CFLAGS+=-g -pthread -lrt $(shell pkg-config libcurl --cflags)
+CFLAGS+=-g -pthread -lrt $(shell pkg-config libcurl --cflags) -lcctz
 CXXFLAGS+=-std=c++14  -Iinclude $(CFLAGS)
 INSTALL_PREFIX=/usr/local
 LDFLAGS+=-lpigpiod_if2 $(shell pkg-config libcurl --libs)

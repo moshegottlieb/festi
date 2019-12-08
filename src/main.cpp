@@ -4,7 +4,7 @@
 #include "sun.h"
 
 int main(int,char**){
-    festi::Sun s;
+    festi::Sun s = festi::Sun::shared();
     s.run();
     return 0;
 }

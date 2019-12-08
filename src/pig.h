@@ -26,6 +26,7 @@ public:
             Alt5 = PI_ALT5
         };
         Pin(unsigned int pin,int pig) noexcept;
+        Pin(int pig) noexcept;
         void setValue(bool value);
         bool value() const;
         void setMode(Mode);
@@ -44,9 +45,11 @@ public:
          */
         void setStrength(unsigned int ma);
         unsigned int strength() const;
+        void setPin(unsigned int pin);
     private:
         unsigned int _pin;
         int _pig;
+        bool isSet;
     };
 
     Pin operator[](unsigned int pin) noexcept;

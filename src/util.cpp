@@ -44,25 +44,6 @@ json festi::readJson(const std::string& filename){
     return json::parse(readFile(filename));
 }
 
-void festi::prettyPrintTime(time_t time,std::ostream& stream){
-    struct tm t;
-    localtime_r(&time,&t);
-    stream << std::put_time(&t,"%X") << std::endl;
-}
-
-
-bool festi::isSameDay(time_t d1,time_t d2){
-    struct tm ld1;
-    localtime_r(&d1,&ld1);
-    struct tm ld2;
-    localtime_r(&d2,&ld2);
-    return ld1.tm_mday == ld2.tm_mday && ld1.tm_mon == ld2.tm_mon && ld1.tm_year == ld2.tm_year;
-}
-bool festi::isToday(time_t d){
-    return isSameDay(d,time(nullptr));
-}
-
-
 std::string festi::readUrl(const std::string& url){
     CURL *curl;
     CURLcode res;

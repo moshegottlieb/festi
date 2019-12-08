@@ -13,5 +13,6 @@
     "sunrise": {
         "hour": 1,
         "minute": 0
-    }
+    },
+    "pin" : 24
 }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <json.hpp>
+#include "time.h"
 
 namespace festi {
 
@@ -13,11 +14,6 @@ public:
     void reload();
     static Config& shared();
 
-    struct Time {
-        uint8_t hour;
-        uint8_t minute;
-        using ptr = std::shared_ptr<Time>;
-    };
     struct DarkSky {
         struct Location {
             double longitude;
@@ -31,7 +27,7 @@ public:
     DarkSky dark;
     Time::ptr sunrise;
     Time::ptr sunset;
-
+    unsigned int pin;
 
 private:
     bool load(const std::string& path);
@@ -39,8 +35,6 @@ private:
 };
 
 /*
-void to_json(nlohmann::json&, const Config::Time&);
-void from_json(const nlohmann::json&, Config::Time&);
 void to_json(nlohmann::json&, const Config::DarkSky&);
 void from_json(const nlohmann::json&, Config::DarkSky&);
 void to_json(nlohmann::json& j, const class Config::DarkSky::Location& l);

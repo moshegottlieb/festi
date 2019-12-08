@@ -1,4 +1,5 @@
 #include "pig.h"
+#include <cassert>
 
 using namespace festi;
 
@@ -13,11 +14,16 @@ Pig::operator int() const noexcept{
     return _pig;
 }
 
-Pig::Pin::Pin(unsigned int pin,int pig) noexcept :_pig(pig),_pin(pin){
+Pig::Pin::Pin(int pig) noexcept:_pig(pig),isSet(false){
+
+}
+
+Pig::Pin::Pin(unsigned int pin,int pig) noexcept :_pig(pig),isSet(false){
+    setPin(pin);
 }
 
 void Pig::Pin::setValue(bool value){
-    
+    assert(isSet);
     switch (gpio_write(_pig,_pin,value ? 1 : 0)){
         case PI_BAD_GPIO:
             throw std::runtime_error("gpio_write Bad gpio number");
@@ -30,6 +36,11 @@ void Pig::Pin::setValue(bool value){
         default:
             throw std::runtime_error("gpio_write unknown error");
     }
+}
+
+void Pig::Pin::setPin(unsigned int pin){
+    _pin = pin;
+    isSet = true;
 }
 
 inline unsigned int _pad_for_pin(unsigned int pin){
