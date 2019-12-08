@@ -5,7 +5,7 @@ set -e
 
 # Install dependencies
 sudo apt-get -y update
-sudo apt-get -y install libcurl4-openssl-dev pigpiod libpigpiod-if-dev nlohmann-json-dev
+sudo apt-get -y install libcurl4-openssl-dev pigpiod libpigpiod-if-dev nlohmann-json-dev libcctz-dev
 
 # Build and install program
 make
