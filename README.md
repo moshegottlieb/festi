@@ -7,7 +7,7 @@ Festive lights for raspberry pi, led lights and GPIO
 
 Installation is super easy! in just 6123 steps you will get a fully functional LED light strip automation for your raspberry pi!  
 These instructions are for the official raspbian distribution (Raspbian 10 _Buster_).  
-- __OR__ -
+__OR__  
 If you don't really care about how it works, just skip to the __Install__ section.  
 There's a script that automates the build process and also takes care of depdendencies, setting a user and a daemon that auto starts.  
 
