@@ -6,14 +6,17 @@ Festive lights for raspberry pi, led lights and GPIO
 ## Install
 
 Installation is super easy! in just 6123 steps you will get a fully functional LED light strip automation for your raspberry pi!  
-These instructions are for the official raspbian distribution.  
+These instructions are for the official raspbian distribution (Raspbian 10 _Buster_).  
+If you don't really care about how it works, just skip to the install section.  
+There's a script that automates the build process and also takes care of depdendencies, setting a user and a daemon that auto starts.  
 
 ### Dependencies
 
 1. `libcurl4-openssl-dev` (or some other `libcurl4-xxx-dev` option)
 1. `pigpiod` and `libpigpiod-if-dev`
 1. `nlohmann-json-dev`
-1. `libcctz-dev`
+1. `libcctz-dev` _Not used yet, but already required_
+
 `sudo apt-get install libcurl4-openssl-dev pigpiod libpigpiod-if-dev nlohmann-json-dev libcctz-dev`
 
 Dependencies required for building:  
@@ -33,6 +36,7 @@ Your built product should be in `build/festi`
 ### Before you begin
 
 1. You will need an API key from [DarkSky](https://darksky.net/dev), it is used to fetch sunrise and sunset times every day.
+1. I'm working on a manual override to the API, can be used with a non connected box, or just as an override, currently - the sunrise override works (I use it to turn off the lights at 1am by telling it the sunrise is at 1am)
 1. You will also need your longitude and latitude (can be of your city too) for the DarkSky API so that your sunrise and sunset times are correct
 1. Make sure your local timezone is correct, I _may_ fix this sometime (`sudo raspi-config` and follow instructions to set timezone) (update: working on this)
 
