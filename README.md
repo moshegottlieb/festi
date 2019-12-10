@@ -1,4 +1,4 @@
-# festi
+# 💡💡💡 festi 💡💡💡
 Festive lights for raspberry pi, led lights and GPIO
 
 ## Festive ligths on your Raspberry pi!
